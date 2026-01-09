@@ -1,0 +1,267 @@
+Model: "TumorME"
+Description: QSP Model for TCE dynamics in a Tumor Microenvironment (TME)
+IV: t
+Constants:
+  N_Av:
+    abbr: N_Av
+    desc: Avogadro's number
+    value: 6.022e23
+  nmol_per_mol:
+    abbr: nmol_per_mol
+    desc: nmol/mol
+    value: 1E9
+Parameters:
+    Tumor_cells_init: 
+      abbr: Tumor_cells_int
+      desc: Initial number of tumor cells
+      value: 2E4
+      type: Tumor
+    total_T_cells_init:
+      abbr: total_T_cells_init
+      desc: Initial number of T cells
+      value: 2E5
+      type: Tumor
+    Vwell: 
+      abbr: Vwell
+      desc: volume of well
+      value: 1E-4
+      unit: L
+    kon_taa_tce:
+      abbr: kon_taa_tce
+      desc: protein binding rate constant
+      value: 1.2E-4
+      type: Cellular
+      unit: nmol^-1 * L * s^-1
+    kon_cd3_tce:
+      abbr: kon_cd3_tce
+      desc: protein binding rate constant
+      value: 3.1E-4
+      type: Cellular
+      unit: nmol^-1 * L * s^-1
+    KD_TAA:
+      abbr: KD_TAA
+      desc: TCE:TAA binding affinity
+      value: 20
+      type: Cellular
+      unit: nmol * L^-1
+    KD_CD3:
+      abbr: KD_CD3
+      desc: TCE:CD3 binding affinity
+      type: Cellular
+      unit: nmol * L^-1
+      variants:
+        human: 
+          value: 230
+          source: data
+    lambda_taa_avidity:
+      abbr: lambda_taa_avidity
+      desc: scaling factor for cis-avidity of TAA:TCE binding
+      value: 1
+      type: Cellular
+      source: Harms et al., 2014
+    lambda_trimer_T:
+      abbr: lambda_trimer_T
+      desc: trans avidity for trimer formation on T cells
+      value: 1
+      type: Cellular
+    lambda_trimer_tumor:
+      abbr: lambda_trimer_tumor
+      desc: trans avidity for trimer formation on tumor cells
+      value: 1
+      type: Cellular
+    lambda_int:
+      abbr: lambda_int
+      desc: internalization rates ratio for TAA:TAA:TCE than TAA:TCE
+      value: 0
+      type: Cellular
+    Thalf_TAA:
+      abbr: Thalf_TAA
+      desc: internalization half-life of TAA
+      value: 0.1
+      type: Cellular
+      unit: hr
+    Thalf_CD3:
+      abbr: Thalf_CD3
+      desc: internalization half-life of CD3
+      value: 3.5
+      type: Cellular
+      unit: hr
+    CD3_per_cell:
+      abbr: CD3_per_cell
+      desc: expression of CD3 per T cell
+      value: 57000
+      type: Cellular
+    TAA_per_cell:
+      abbr: TAA_per_cell
+      desc: expression of TAA per tumor cell
+      value: 13173
+      type: Cellular
+    Tumor_cell_doubling_time:
+      abbr: Tumor_cell_doubling_time
+      desc: doubling time
+      value: 24
+      type: Tumor
+      unit: hr
+    k_growth:
+      abbr: k_growth
+      desc: tumor growth rate
+      value: log(2)/(Tumor_cell_doubling_time)
+      type: Tumor
+      unit: hr^-1
+      convert: s^-1
+    emax_apop:
+      abbr: emax_apop
+      desc: rate of tumor cell apoptosis due to trimers (CD3:TCE:TAA) on tumor cell
+      value: 6.0E-6
+      type: Cellular
+      unit: s^-1
+    tt50_kill:
+      abbr: tt50_kill
+      desc: number of trimers per cell resulting in half-max cell killing
+      value: 1
+      type: Cellular
+    n_kill:
+      abbr: n_kill
+      desc: Hill coefficient on trimer-induced tumor cell killing
+      value: 1
+      type: Cellular
+    FLG_trimer_per_tumor_kill:
+      abbr: FLG_trimer_per_tumor_kill
+      desc: FLG for triggering tumor cell death based on trimers on tumor cell (if turned off, then trigger death based on trimer per T cell)
+      value: 1
+      type: Cellular
+    k_t_prolif:
+      abbr: k_t_prolif
+      desc: placeholder for active T cell proliferation
+      value: 0
+      type: Cellular
+      unit: s^-1
+    frac_act_T_death:
+      abbr: frac_act_T_death
+      desc: placeholder for the fraction of active T cell death after trimer formation
+      value: 0
+      type: Cellular
+    tt50_t_activate: 
+      abbr: tt50_t_activate
+      desc: EC50 of trimer to induce T cell activation
+      value: 1
+      type: Cellular
+    emax_t_activate:
+      abbr: emax_t_activate
+      desc: maximum rate for trimer-induced T cell activation
+      value: 0
+      type: Cellular
+      unit: s^-1
+    n_act:
+      abbr: n_act
+      desc: Hill coefficient on trimer-induced T cell activation
+      value: 1
+      type: Cellular
+    k_syn_cytokine:
+      abbr: k_syn_cytokine
+      desc: maximum rate for trimer-induced (per T cell) cytokine production per active T cell
+      value: 0
+      type: Cellular
+      unit: s^-1
+    tt50_cytokine:
+      abbr: tt50_cytokine
+      desc: EC50 of trimer-induced (per T cell) cytokine production
+      value: 1
+      type: Cellular
+    n_syn_cytokine:
+      abbr: n_syn_cytokine
+      desc: Hill coefficient trimer-induced (per T cell) cytokine production
+      value: 1
+      type: Cellular
+    k_deg_cytokine:
+      abbr: n_syn_cytokine
+      desc: degradation rate of cytokines
+      value: 0
+      type: Cellular
+      unit: s^-1
+
+Variables:
+  TCE:
+    abbr: TCE
+    desc: concentration of TCE in tumor extracellular space
+    initial: 0.0
+    unit: nmol*L^-1
+    type: TCE
+  CD3:
+    abbr: CD3
+    desc: concentration of CD3 in tumor extracellular space (total CD3 on both naive T and active T)
+    initial: CD3_per_cell*total_T_cells_init/N_Av/Vwell * nmol_per_mol
+    unit: nmol*L^-1
+    type: Cellular
+  TAA:
+    abbr: TAA
+    desc: concentration of TAA in tumor extracellular space 
+    initial: TAA_per_cell*Tumor_cells_init/N_Av/Vwell * nmol_per_mol
+    unit: nmol*L^-1
+    type: Cellular
+  CD3_TCE:
+    abbr: CD3_TCE
+    desc: concentration of CD3_TCE in tumor extracellular space 
+    initial: 0.0
+    unit: nmol*L^-1
+    type: Cellular
+  TAA_TCE:
+    abbr: TAA_TCE
+    desc: concentration of TAA_TCE in tumor extracellular space 
+    initial: 0.0
+    unit: nmol*L^-1
+    type: Cellular
+  TAA_TAA_TCE:
+    abbr: TAA_TAA_TCE
+    desc: concentration of TAA_TAA_TCE in tumor extracellular space 
+    initial: 0.0
+    unit: nmol*L^-1
+    type: Cellular
+  CD3_TCE_TAA:
+    abbr: CD3_TCE_TAA
+    desc: concentration of CD3_TCE_TAA in tumor extracellular space 
+    initial: 0.0
+    unit: nmol*L^-1
+    type: Cellular
+  CD3_TCE_TAA_TAA:
+    abbr: CD3_TCE_TAA_TAA
+    desc: concentration of CD3_TCE_TAA_TAA in tumor extracellular space 
+    initial: 0.0
+    unit: nmol*L^-1
+    type: Cellular
+  Tumor_cell:
+    abbr: Tumor_cell
+    desc: number of tumor cells
+    initial: Tumor_cells_init
+    type: Tumor
+  T_cell:
+    abbr: T_cell
+    desc: number of T cells (naive T + active T)
+    initial: total_T_cells_init
+    type: Tumor
+  T_act:
+    abbr: T_act
+    desc: number of active T cells
+    initial: 0.0
+    type: Tumor
+  cytokine:
+    abbr: cytokine
+    desc: number of cytokines
+    initial: 0.0
+    type: Tumor
+  deg_TAA_TCE:
+    abbr: deg_TAA_TCE
+    desc: degraded TAA_TCE
+    initial: 0.0
+    unit: nmol*L^-1
+    type: Tumor
+  dead_T:
+    abbr: dead_T
+    desc: number of dead T cells
+    initial: 0.0
+    type: Tumor
+  dead_Tumor:
+    abbr: dead_Tumor
+    desc: number of dead Tumor cells
+    initial: 0.0
+    type: Tumor
